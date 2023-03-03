@@ -23,6 +23,10 @@
 				font-family: sans-serif;
 				pointer-events: none;
 			}
+			.btn-dark:hover {
+				background-color: rgb(217, 217, 98) !important;
+				color: #343a40;
+			}
 		</style>
 		<title>CoinStack!</title>
 	</head>
@@ -97,6 +101,7 @@
 		let RESET_BTN_STYLE = "btn btn-warning";
 		let COIN_BTN_STYLE = "btn btn-dark";
 
+		// REFACTOR: remove global vars; make class structure
 		let btns = [];
 
 		let nodes, links, lines, gnodes, circles, labels;
@@ -115,11 +120,6 @@
 
 		let networkEl = document.querySelector("#network-analysis");
 
-		// returns random int between 0 and num
-		function getRandomInt() {
-			return Math.floor(Math.random() * num);
-		}
-
 		function mex(values) {
 			let min = 0;
 
@@ -130,9 +130,11 @@
 			return min;
 		}
 
-		function removeCircleHighlight(index) {
-			circles[0][index].style.stroke = "black";
-			circles[0][index].style.strokeWidth = 1;
+		function removeCircleHighlight() {
+			for (let n = 0; n < circles[0].length; n++) {
+				circles[0][n].style.stroke = "black";
+				circles[0][n].style.strokeWidth = 1;
+			}
 		}
 
 		function highlightCircle(index, isPlayerTurn) {
@@ -155,24 +157,13 @@
 					circles[0][firstIdeal].style.stroke = "green";
 					circles[0][firstIdeal].style.strokeWidth = 5;
 				} else {
+					// TODO:
 					// If easy mode
 					// choose node where next gsVal != 0
 					// if hard
 					// welp
 				}
 			}
-		}
-
-
-		function validateFormListeners() {
-			difficultyChoiceEl.addEventListener("change", (e) => {
-				if (e.target.value === "hard") {
-					turnChoiceEl.disabled = true;
-					turnChoiceEl.value = "first";
-				} else {
-					turnChoiceEl.disabled = false;
-				}
-			});
 		}
 
 		function addStartListener() {
@@ -185,7 +176,7 @@
 
 			btns[0].addEventListener("click", (e) => {
 				e.currentTarget.remove();
-				removeCircleHighlight(btns.length - 1);
+				removeCircleHighlight();
 
 				btns.splice(0, 1);
 
@@ -197,7 +188,7 @@
 			btns[1].addEventListener("click", (e) => {
 				e.currentTarget.previousElementSibling.remove();
 				e.currentTarget.remove();
-				removeCircleHighlight(btns.length - 1);
+				removeCircleHighlight();
 
 				btns.splice(0, 2);
 
@@ -230,15 +221,36 @@
 			return true;
 		}
 
-		function cpuRemoveButtons() {
-			removeCircleHighlight(btns.length - 1);
+		function cpuRemoveButtons(isHard) {
+			let numToDel;
+			let currNodeIndex = btns.length - 1;
+			removeCircleHighlight();
+			if (isHard) {
+				// TODO: when everything gets moved to proper class make this a method
+				let targetedNodes = links
+					.filter((link) => link.source.id === currNodeIndex)
+					.map((link) => link.target);
 
-			btns[0].remove();
-			btns.splice(0, 1);
+				let idealMoves = targetedNodes.filter((node) => node.gs === 0);
+
+				if (idealMoves.length > 0) {
+					numToDel = currNodeIndex - idealMoves[0].id;
+				} else {
+					numToDel = Math.round(Math.random() + 1);
+				}
+			} else {
+				numToDel = Math.round(Math.random() + 1);
+			}
+
+			for (let n = 0; n < numToDel; n++) {
+				btns[n].remove();
+			}
+
+			btns.splice(0, numToDel);
 		}
 
 		function nextRound(isPlayerTurn, round, isHard) {
-			// Highlight in red the current number of coins on the network
+			// Highlight in red the current number of coins on the network and optimal strat for player
 			if (btns.length > 0) {
 				highlightCircle(btns.length - 1, isPlayerTurn);
 			}
@@ -260,7 +272,7 @@
 					infoText.innerHTML = "CPU choosing coin(s) to remove...";
 					infoText.classList = CPU_TURN_ALERT_STYLE;
 					setTimeout(() => {
-						cpuRemoveButtons();
+						cpuRemoveButtons(isHard);
 						isPlayerTurn = !isPlayerTurn;
 						round += 1;
 						nextRound(isPlayerTurn, round, isHard);
@@ -282,15 +294,15 @@
 			startBtn.addEventListener("click", resetGame);
 
 			let isPlayerTurn;
-			let turnChoice = turnChoiceEl.selectedIndex;
-			if (turnChoice === 0) {
+			let turnChoice = turnChoiceEl.value;
+			if (turnChoice === "first") {
 				isPlayerTurn = true;
 			} else {
 				isPlayerTurn = false;
 			}
 
-			let diffChoice = difficultyChoiceEl.selectedIndex;
-			if (diffChoice === 0) {
+			let diffChoice = difficultyChoiceEl.value;
+			if (diffChoice === "easy") {
 				isHard = false;
 			} else {
 				isHard = true;
@@ -474,6 +486,5 @@
 		}
 
 		addStartListener();
-		validateFormListeners();
 	</script>
 </html>
