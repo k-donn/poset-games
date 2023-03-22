@@ -91,6 +91,7 @@
 		</div>
 	</body>
 	<script>
+		"use strict";
 		let READY_ALERT_STYLE = "alert alert-warning";
 		let PLAYER_TURN_ALERT_STYLE = "alert alert-primary";
 		let CPU_TURN_ALERT_STYLE = "alert alert-info";
@@ -183,7 +184,7 @@
 				round += 1;
 				isPlayerTurn = !isPlayerTurn;
 
-				nextRound(isPlayerTurn, round);
+				nextRound(isPlayerTurn, round, isHard);
 			});
 			btns[1].addEventListener("click", (e) => {
 				e.currentTarget.previousElementSibling.remove();
@@ -224,7 +225,9 @@
 		function cpuRemoveButtons(isHard) {
 			let numToDel;
 			let currNodeIndex = btns.length - 1;
+
 			removeCircleHighlight();
+
 			if (isHard) {
 				// TODO: when everything gets moved to proper class make this a method
 				let targetedNodes = links
@@ -301,6 +304,7 @@
 				isPlayerTurn = false;
 			}
 
+			let isHard;
 			let diffChoice = difficultyChoiceEl.value;
 			if (diffChoice === "easy") {
 				isHard = false;
